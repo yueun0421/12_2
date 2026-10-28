@@ -19,7 +19,7 @@ st.markdown(
         font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
     }
 
-    /* 좌측 사이드바 - 이미지의 분홍색 세로 메뉴바 느낌 */
+    /* 좌측 사이드바 - 분홍색 세로 메뉴바 */
     [data-testid="stSidebar"] {
         background-color: #FA8C9D !important;
         border-right: 3px solid #E87587;
@@ -129,18 +129,18 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# 기본 데이터
+# 기본 데이터: 1인 기준 중량(g) 및 100g당 평균 칼로리(kcal)
 FOODS = {
-    "밥": 210,
-    "고기": 180,
-    "생선": 150,
-    "파스타(건면)": 100,
-    "국수(건면)": 100,
-    "감자": 200,
-    "채소": 150,
-    "과일": 150,
-    "두부": 150,
-    "떡볶이 떡": 200,
+    "밥": {"amount": 210, "kcal_per_100g": 130},
+    "고기": {"amount": 180, "kcal_per_100g": 250},
+    "생선": {"amount": 150, "kcal_per_100g": 140},
+    "파스타(건면)": {"amount": 100, "kcal_per_100g": 360},
+    "국수(건면)": {"amount": 100, "kcal_per_100g": 350},
+    "감자": {"amount": 200, "kcal_per_100g": 76},
+    "채소": {"amount": 150, "kcal_per_100g": 25},
+    "과일": {"amount": 150, "kcal_per_100g": 50},
+    "두부": {"amount": 150, "kcal_per_100g": 84},
+    "떡볶이 떡": {"amount": 200, "kcal_per_100g": 220},
 }
 
 MEAL_LEVELS = {
@@ -149,7 +149,7 @@ MEAL_LEVELS = {
     "푸짐하게": 1.25,
 }
 
-# 좌측 사이드바 (POZZO 사이드바 느낌)
+# 좌측 사이드바
 with st.sidebar:
     st.markdown("<h2 style='text-align: center;'>🏠 POZZO Menu</h2>", unsafe_allow_html=True)
     st.divider()
@@ -173,19 +173,19 @@ with st.sidebar:
 
 multiplier = MEAL_LEVELS[meal_level]
 
-# 메인 헤더 (어닝 차양 디자인)
+# 메인 헤더
 st.markdown('<div class="awning-roof"></div>', unsafe_allow_html=True)
 st.markdown(
     """
     <div class="header-banner">
-        <h1>🍨 재료 준비</h1>
-        <p>인원수와 식사 양에 맞춰 필요한 식재료 준비량을 귀엽고 손쉽게 계산해 보세요!</p>
+        <h1>🍨 재료 준비 & 칼로리 계산기</h1>
+        <p>인원수와 식사 양에 맞춰 식재료 준비량과 예상 칼로리를 손쉽게 계산해 보세요!</p>
     </div>
     """,
     unsafe_allow_html=True
 )
 
-# 추가할 재료 선택 카드
+# 1. 추가할 재료 선택 카드
 with st.container():
     st.markdown('<div class="pozzo-card card-yellow">', unsafe_allow_html=True)
     st.subheader("🥗 1. 준비할 재료 선택")
@@ -217,8 +217,8 @@ with st.container():
 if not st.session_state.food_items:
     st.warning("재료를 하나 이상 추가해 주세요.")
 
-# 개별 재료 카드 목록 (파스텔 카드 디자인)
-st.subheader("📋 선택한 재료별 권장 준비량")
+# 개별 재료 카드 및 칼로리 계산
+st.subheader("📋 선택한 재료별 권장량 및 예상 칼로리")
 
 results = []
 card_colors = ["card-pink", "card-green", "card-blue", "card-yellow"]
@@ -228,21 +228,31 @@ for index, food in enumerate(st.session_state.food_items):
     
     with st.container():
         st.markdown(f'<div class="pozzo-card {color_class}">', unsafe_allow_html=True)
-        col_name, col_amount, col_remove = st.columns([2, 2, 1])
+        col_name, col_amount, col_kcal, col_remove = st.columns([1.8, 1.5, 1.5, 0.8])
+
+        base_amount = FOODS[food]["amount"]
+        kcal_per_100g = FOODS[food]["kcal_per_100g"]
+        
+        # 권장량(10g 단위 올림) 및 예상 칼로리 계산
+        recommended = base_amount * people * multiplier
+        rounded_amount = math.ceil(recommended / 10) * 10
+        total_kcal = math.round((rounded_amount / 100) * kcal_per_100g) if hasattr(math, 'round') else round((rounded_amount / 100) * kcal_per_100g)
 
         with col_name:
             st.markdown(f"<h3 style='margin:0; color:#444;'>🥑 {food}</h3>", unsafe_allow_html=True)
+            st.caption(f"1인 {base_amount}g 기준 (100g당 약 {kcal_per_100g}kcal)")
 
         with col_amount:
-            base_amount = FOODS[food]
-            recommended = base_amount * people * multiplier
-            rounded_amount = math.ceil(recommended / 10) * 10
-
             st.metric(
                 "추천 준비량",
                 f"{rounded_amount:,} g",
             )
-            st.caption(f"1인 {base_amount}g × {people}명 × {multiplier}")
+
+        with col_kcal:
+            st.metric(
+                "예상 칼로리",
+                f"{total_kcal:,} kcal",
+            )
 
         with col_remove:
             st.write("")
@@ -255,28 +265,33 @@ for index, food in enumerate(st.session_state.food_items):
         results.append({
             "재료": food,
             "1인 기준량(g)": base_amount,
-            "인원수": int(people),
-            "배율": multiplier,
             "권장량(g)": rounded_amount,
             "권장량(kg)": round(rounded_amount / 1000, 2),
+            "예상 칼로리(kcal)": total_kcal,
         })
 
 st.divider()
 
 # 요약 카드 및 결과
-st.subheader("📝 2. 재료 준비 목록 요약")
+st.subheader("📝 2. 재료 준비 및 칼로리 요약")
 
 if results:
-    total = sum(item["권장량(g)"] for item in results)
+    total_g = sum(item["권장량(g)"] for item in results)
+    total_calories = sum(item["예상 칼로리(kcal)"] for item in results)
+    per_person_kcal = round(total_calories / people)
 
-    col_m1, col_m2 = st.columns(2)
+    col_m1, col_m2, col_m3 = st.columns(3)
     with col_m1:
         st.markdown('<div class="pozzo-card card-blue">', unsafe_allow_html=True)
         st.metric("준비할 재료 종류", f"{len(results)}가지")
         st.markdown('</div>', unsafe_allow_html=True)
     with col_m2:
+        st.markdown('<div class="pozzo-card card-yellow">', unsafe_allow_html=True)
+        st.metric("전체 중량 합계", f"{total_g:,} g")
+        st.markdown('</div>', unsafe_allow_html=True)
+    with col_m3:
         st.markdown('<div class="pozzo-card card-pink">', unsafe_allow_html=True)
-        st.metric("전체 재료 중량 합계", f"{total:,} g")
+        st.metric("총 칼로리 (1인당)", f"{total_calories:,} kcal ({per_person_kcal:,} kcal/인)")
         st.markdown('</div>', unsafe_allow_html=True)
 
     st.dataframe(
@@ -287,44 +302,46 @@ if results:
 
     # 메모용 요약 텍스트
     summary_lines = [
-        "🥦 재료 준비 목록",
+        "🥦 재료 준비 & 칼로리 요약 목록",
         f"식사 인원: {people}명",
         f"식사 분량: {meal_level}",
         "",
     ]
     for item in results:
         summary_lines.append(
-            f"- {item['재료']}: {item['권장량(g)']:,}g ({item['권장량(kg)']:.2f}kg)"
+            f"- {item['재료']}: {item['권장량(g)']:,}g ({item['권장량(kg)']:.2f}kg) | 약 {item['예상 칼로리(kcal)']:,}kcal"
         )
     summary_lines.append("")
-    summary_lines.append(f"전체 중량 합계: {total:,}g")
+    summary_lines.append(f"전체 중량 합계: {total_g:,}g")
+    summary_lines.append(f"전체 칼로리 합계: {total_calories:,}kcal (1인당 약 {per_person_kcal:,}kcal)")
 
     summary = "\n".join(summary_lines)
 
     st.text_area(
         "재료 준비 메모 (복사해서 사용하세요)",
         value=summary,
-        height=180,
+        height=200,
     )
 
     st.download_button(
         "📄 재료 목록 다운로드 (.txt)",
         data=summary,
-        file_name="ingredient_prep_list.txt",
+        file_name="ingredient_prep_kcal_list.txt",
         mime="text/plain",
         use_container_width=True,
     )
 
-with st.expander("ℹ️ 1인 기본 기준량 안내"):
+with st.expander("ℹ️ 1인 기본 기준량 및 칼로리 정보 안내"):
     st.markdown(
         """
-        - **밥**: 1인 210g
-        - **고기**: 1인 180g
-        - **생선**: 1인 150g
-        - **파스타·국수**: 건면 기준 1인 100g
-        - **채소**: 1인 150g
+        - **밥**: 1인 210g (약 273kcal)
+        - **고기**: 1인 180g (약 450kcal)
+        - **생선**: 1인 150g (약 210kcal)
+        - **파스타·국수**: 건면 기준 1인 100g (약 350~360kcal)
+        - **채소**: 1인 150g (약 38kcal)
+        - **과일**: 1인 150g (약 75kcal)
 
-        *기준량은 재료 손질 및 준비 편의를 위한 참고용 예시입니다.*
+        *표시된 칼로리는 대표 식재료 기준의 평균값으로 조리 방식 및 부위에 따라 달라질 수 있습니다.*
         """
     )
 
