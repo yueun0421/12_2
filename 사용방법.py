@@ -16,51 +16,65 @@ st.set_page_config(
 st.markdown("""
 <style>
 
-/* 전체 배경 */
+/* 배경 */
 .stApp {
-    background-color: #80F5F5;
+    background-color: #9BF3FA;
 }
 
-/* 화면 너비 */
+/* 페이지 여백 */
 .block-container {
-    padding-top: 2rem;
-    max-width: 900px;
+    padding-top: 1rem;
+    max-width: 800px;
 }
 
-/* 제목 */
-.main-title {
+/* 제목 상자 */
+.title-box {
+    background-color: white;
+    border: 4px solid black;
+    border-radius: 2px;
+    padding: 12px;
     text-align: center;
-    font-size: 48px;
-    font-weight: 900;
+    margin-bottom: 18px;
+}
+
+/* 제목 글자 */
+.title-text {
     color: black;
-    margin-bottom: 50px;
+    font-size: 36px;
+    font-weight: 900;
+    margin: 0;
+}
+
+/* 페이지 기능 안내 */
+.page-info {
+    color: black;
+    font-size: 20px;
+    margin: 10px 0 15px 10px;
 }
 
 /* 메뉴 버튼 */
 div.stButton > button {
-    background-color: #80F5F5;
+    background-color: white;
     color: black;
-    border: 3px solid black;
-    border-radius: 12px;
-    font-size: 28px;
-    font-weight: bold;
-    min-height: 180px;
+    border: 4px solid black;
+    border-radius: 2px;
+    height: 75px;
     width: 100%;
-    white-space: pre-wrap;
-    transition: 0.2s;
+    font-size: 22px;
+    font-weight: bold;
 }
 
 /* 버튼에 마우스를 올렸을 때 */
 div.stButton > button:hover {
-    background-color: #B0FFFF;
+    background-color: #E8FFFF;
     color: black;
-    border: 3px solid black;
-    transform: scale(1.02);
+    border: 4px solid black;
 }
 
-/* 글자 색상 */
-h1, h2, h3, p {
-    color: black !important;
+/* 버튼 클릭 시 */
+div.stButton > button:active {
+    background-color: #D0F8FA;
+    color: black;
 }
 
 </style>
@@ -70,9 +84,8 @@ h1, h2, h3, p {
 # -----------------------------
 # 유통기한 설명 팝업
 # -----------------------------
-@st.dialog("🥬 유통기한")
+@st.dialog("🥬 유통기한 페이지")
 def expiry_dialog():
-
     st.write(
         "식재료나 음식의 유통기한을 쉽게 확인할 수 있다"
     )
@@ -81,9 +94,8 @@ def expiry_dialog():
 # -----------------------------
 # 조리법 설명 팝업
 # -----------------------------
-@st.dialog("🍳 조리법")
+@st.dialog("🍳 조리법 페이지")
 def recipe_dialog():
-
     st.write(
         "가지고 있는 식재료의 적당량과 "
         "만들고자하는 음식의 조리법을 알려준다"
@@ -93,47 +105,38 @@ def recipe_dialog():
 # -----------------------------
 # 메인 화면
 # -----------------------------
-st.markdown(
-    '<div class="main-title">양 조절 도우미</div>',
-    unsafe_allow_html=True
-)
 
-# 메뉴 버튼 2개
-col1, col2 = st.columns(2)
+# 제목
+st.markdown("""
+<div class="title-box">
+    <p class="title-text">양조절 도우미</p>
+</div>
+""", unsafe_allow_html=True)
+
+
+# 페이지 기능
+st.markdown("""
+<div class="page-info">
+    ❔ 페이지 기능
+</div>
+""", unsafe_allow_html=True)
+
+
+# 메뉴 버튼
+col1, col2 = st.columns(2, gap="large")
 
 with col1:
-
     if st.button(
-        "🥬\n유통기한",
-        key="expiry_menu",
+        "유통기한 페이지",
+        key="expiry_button",
         use_container_width=True
     ):
         expiry_dialog()
 
 with col2:
-
     if st.button(
-        "🔎\n조리법",
-        key="recipe_menu",
+        "조리법 페이지",
+        key="recipe_button",
         use_container_width=True
     ):
         recipe_dialog()
-
-
-# -----------------------------
-# 하단 안내 문구
-# -----------------------------
-st.markdown("---")
-
-st.markdown(
-    """
-    <p style="
-        text-align: center;
-        font-size: 18px;
-        color: black;
-    ">
-        냉장고 속 식재료를 알뜰하게 활용해 보세요!
-    </p>
-    """,
-    unsafe_allow_html=True
-)
